@@ -14,11 +14,13 @@ nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
 nav button{margin:0;font-size:.85rem;background:#fff;color:var(--ink);border:1px solid var(--line)}nav button.on{background:var(--ink);color:#fff}
 output{display:block;margin-top:8px;white-space:pre-wrap}small{opacity:.7;display:block;margin-top:6px}
 table{width:100%;border-collapse:collapse;direction:ltr;font-size:.8rem}td,th{border-bottom:1px solid var(--line);padding:4px;text-align:left}
+#dlbox a{display:block;background:var(--hi);color:#fff;padding:12px;text-align:center;font-weight:700;text-decoration:none;margin-bottom:12px}
 .t{display:none}.t.on{display:block}:focus-visible{outline:3px solid var(--hi)}
 </style></head><body>
 <h1>أدوات المساحة</h1>
 <nav><button id="b1" onclick="tab(1)">1. ملفات إلى DXF</button><button id="b2" onclick="tab(2)">2. DXF إلى KML</button><button id="b3" onclick="tab(3)">3. توقيع نقاط</button></nav>
 
+<div id="dlbox"></div>
 <section id="sysbox" style="display:none"><label>نظام الإحداثيات</label>
 <select id="sys" onchange="sysUI()"><option value="old">ETM (مرجع OLDEGYP)</option><option value="utm">WGS84 / UTM</option></select>
 <div id="s_old"><label>الحزام</label><select id="belt"><option value="red">ETM-1 Red Belt</option><option value="purple">ETM-2 Purple Belt</option><option value="blue">ETM-3 Blue Belt</option><option value="sred">ETM-4 South Red</option><option value="spur">ETM-5 South Purple</option></select></div>
@@ -61,7 +63,9 @@ const a=parseFloat(nums[0]),b=parseFloat(nums[1]),z=parseFloat(nums[2])||0;if(is
 const code=nums.slice(3).join(' '),sw=od.replace('p','')[0]==='e',[n,e]=sw?[b,a]:[a,b];r.push({name:name||String(++k),e,n,z,code})}return r}
 async function save(name,ext,data){const pub=typeof claude!=='undefined'&&claude.use;
 if(pub){const d=await claude.use('downloads');if(!d)throw 0;await d.save({filename:name+(ext==='kmz'?'_kmz.zip':'_'+ext+'.txt'),data});return'تم الحفظ. غيّر الامتداد إلى .'+ext}
-const a=document.createElement('a');a.href=URL.createObjectURL(data instanceof Blob?data:new Blob([data]));a.download=name+'.'+ext;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1e4);return'تم التحميل'}
+const bl=data instanceof Blob?data:new Blob([data],{type:'application/octet-stream'}),l=document.createElement('a');
+l.href=URL.createObjectURL(bl);l.download=name+'.'+ext;l.textContent='⬇ اضغط هنا لو التحميل ما بدأش: '+l.download;
+$('dlbox').replaceChildren(l);l.click();return'تم التحميل'}
 const esc=s=>String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
 async function out(fmt,kml,name,o){try{const d=fmt==='kmz'?await(new JSZip().file('doc.kml',kml).generateAsync({type:'blob'})):kml;$(o).textContent=await save(name,fmt,d)}catch(e){$(o).textContent=e&&e.code==='declined'?'تم الإلغاء':'تعذر الحفظ'}}
 const wrap=x=>'<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>'+x+'</Document></kml>';
