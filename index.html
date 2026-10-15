@@ -1,0 +1,102 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#1d3557"><title>أدوات المساحة</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{--ink:#1d3557;--paper:#eef0e6;--line:#c9ccbd;--hi:#e85d04}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(rgba(238,240,230,.55),rgba(238,240,230,.55)),url(bg.jpg) center/cover no-repeat fixed,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 800' fill='none' stroke='%231d3557' stroke-width='4' stroke-linecap='round' stroke-linejoin='round' opacity='.45'%3E%3Cpath d='M135 75Q200 25 265 75'/%3E%3Cpath d='M105 100Q200 5 295 100'/%3E%3Cellipse cx='200' cy='150' rx='120' ry='30'/%3E%3Cpath d='M80 150V210A120 30 0 0 0 320 210V150'/%3E%3Ccircle cx='150' cy='200' r='5' fill='%231d3557'/%3E%3Ccircle cx='200' cy='208' r='5' fill='%231d3557'/%3E%3Cpath d='M200 240V740M185 300h30'/%3E%3Crect x='140' y='380' width='120' height='170' rx='16'/%3E%3Crect x='152' y='396' width='96' height='96' rx='6'/%3E%3Ccircle cx='200' cy='522' r='8'/%3E%3Cpath d='M200 740l-12 34h24zM120 774h160'/%3E%3C/svg%3E") center bottom/auto 75vh no-repeat fixed,var(--paper);color:var(--ink);font:16px/1.6 system-ui,Tahoma,sans-serif;padding:env(safe-area-inset-top) 14px 24px}
+h1{font-size:1.3rem;margin:14px 0}section{background:rgba(255,255,255,.93);border:1px solid var(--line);padding:14px;margin-bottom:12px}
+label{display:block;font-size:.9rem;margin:8px 0 3px}.r{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input,select,textarea,button{width:100%;padding:10px;font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink)}
+button{background:var(--ink);color:#fff;border:0;margin-top:10px;font-weight:700}button.p{background:var(--hi)}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+nav button{margin:0;font-size:.85rem;background:#fff;color:var(--ink);border:1px solid var(--line)}nav button.on{background:var(--ink);color:#fff}
+output{display:block;margin-top:8px;white-space:pre-wrap}small{opacity:.7;display:block;margin-top:6px}
+table{width:100%;border-collapse:collapse;direction:ltr;font-size:.8rem}td,th{border-bottom:1px solid var(--line);padding:4px;text-align:left}
+.t{display:none}.t.on{display:block}:focus-visible{outline:3px solid var(--hi)}
+</style></head><body>
+<h1>أدوات المساحة</h1>
+<nav><button id="b1" onclick="tab(1)">1. ملفات إلى DXF</button><button id="b2" onclick="tab(2)">2. DXF إلى KML</button><button id="b3" onclick="tab(3)">3. توقيع نقاط</button></nav>
+
+<section id="sysbox" style="display:none"><label>نظام الإحداثيات</label>
+<select id="sys" onchange="sysUI()"><option value="old">ETM (مرجع OLDEGYP)</option><option value="utm">WGS84 / UTM</option></select>
+<div id="s_old"><label>الحزام</label><select id="belt"><option value="red">ETM-1 Red Belt</option><option value="purple">ETM-2 Purple Belt</option><option value="blue">ETM-3 Blue Belt</option><option value="sred">ETM-4 South Red</option><option value="spur">ETM-5 South Purple</option></select></div>
+<div id="s_utm" style="display:none"><label>الزون</label><select id="zone"><option>36</option><option>35</option><option>34</option><option>37</option></select></div>
+</section>
+
+<section class="t" id="t1"><b>تحويل ملف نقاط إلى DXF</b>
+<label>ملف TXT / CSV / SDR</label><input id="f1" type="file">
+<label>أو الصق النقاط</label><textarea id="x1" rows="4" placeholder="3300000 650000 10 TP"></textarea>
+<label>ترتيب الأعمدة (لغير SDR)</label><select id="ord"><option value="nezc">N E Z Code</option><option value="pnezc">رقم N E Z Code</option><option value="enzc">E N Z Code</option><option value="penzc">رقم E N Z Code</option></select>
+<label>الصيغة</label><select disabled><option>DXF</option></select><small>DWG لا يمكن إنشاؤه داخل المتصفح. استخدم نسخة السيرفر app.py مع ODA File Converter.</small>
+<button class="p" onclick="mkDxf()">تحميل DXF</button><output id="o1"></output></section>
+
+<section class="t" id="t2"><b>تحويل DWG / DXF إلى KML / KMZ</b>
+<label>ملف DWG أو DXF</label><input id="f2" type="file">
+<label>عنوان سيرفر التحويل (لملفات DWG فقط)</label><input id="srv" dir="ltr" placeholder="https://your-app.onrender.com">
+<small>DWG لا يُقرأ داخل المتصفح، فيُرسل للسيرفر (app.py) ليتحول إلى DXF. ملفات DXF تعمل بدون سيرفر. اختر النظام الإحداثي للرسم أعلاه.</small>
+<div class="r"><button class="p" onclick="mkKml('kml')">تحميل KML</button><button class="p" onclick="mkKml('kmz')">تحميل KMZ</button></div>
+<button onclick="onlyDxf()">تحويل DWG إلى DXF فقط</button><output id="o2"></output></section>
+
+<section class="t" id="t3"><b>توقيع نقاط على الخريطة</b>
+<div class="r"><div><label>North</label><input id="n" type="number" step="any" inputmode="decimal"></div><div><label>East</label><input id="e" type="number" step="any" inputmode="decimal"></div></div>
+<label>اسم النقطة</label><input id="nm"><button onclick="addPt()">إضافة نقطة</button><output id="o3"></output>
+<table id="tb"></table>
+<div class="r"><button class="p" onclick="ptsKml('kml')">تحميل KML</button><button class="p" onclick="ptsKml('kmz')">تحميل KMZ</button></div>
+<button onclick="P=[];draw()">مسح النقاط</button></section>
+
+<script>
+const $=i=>document.getElementById(i);let P=[];
+const B={red:[31,615000,810000],purple:[27,700000,200000],blue:[35,300000,1100000],sred:[31,615000,1810000],spur:[27,700000,1200000]};
+function def(){const s=$('sys').value;if(s==='utm')return`+proj=utm +zone=${$('zone').value} +datum=WGS84 +units=m +no_defs`;
+const[l,x,y]=B[$('belt').value];return`+proj=tmerc +lat_0=30 +lon_0=${l} +k=1 +x_0=${x} +y_0=${y} +a=6378200 +rf=298.3 +towgs84=-130,110,-13 +units=m +no_defs`}
+const fwd=(e,n)=>proj4(def(),'WGS84',[e,n]);
+function sysUI(){for(const k of['old','utm'])$('s_'+k).style.display=$('sys').value===k?'':'none'}
+function tab(i){for(let k=1;k<4;k++){$('t'+k).classList.toggle('on',k===i);$('b'+k).classList.toggle('on',k===i)}$('sysbox').style.display=i>1?'':'none'}
+function parse(txt,o){const r=[];let k=0;for(const L of txt.split(/\r?\n/)){const s=L.trim();let name,nums,od=o;
+if(s.startsWith('08')){const t=s.split(/\s+/);name=t[0].slice(4)||t[0];nums=t.slice(1);od='nezc'}
+else{const t=s.split(/[,\s;]+/).filter(Boolean);if(!t.length)continue;if(od[0]==='p')name=t.shift();nums=t}
+const a=parseFloat(nums[0]),b=parseFloat(nums[1]),z=parseFloat(nums[2])||0;if(isNaN(a)||isNaN(b))continue;
+const code=nums.slice(3).join(' '),sw=od.replace('p','')[0]==='e',[n,e]=sw?[b,a]:[a,b];r.push({name:name||String(++k),e,n,z,code})}return r}
+async function save(name,ext,data){const pub=typeof claude!=='undefined'&&claude.use;
+if(pub){const d=await claude.use('downloads');if(!d)throw 0;await d.save({filename:name+(ext==='kmz'?'_kmz.zip':'_'+ext+'.txt'),data});return'تم الحفظ. غيّر الامتداد إلى .'+ext}
+const a=document.createElement('a');a.href=URL.createObjectURL(data instanceof Blob?data:new Blob([data]));a.download=name+'.'+ext;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1e4);return'تم التحميل'}
+const esc=s=>String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+async function out(fmt,kml,name,o){try{const d=fmt==='kmz'?await(new JSZip().file('doc.kml',kml).generateAsync({type:'blob'})):kml;$(o).textContent=await save(name,fmt,d)}catch(e){$(o).textContent=e&&e.code==='declined'?'تم الإلغاء':'تعذر الحفظ'}}
+const wrap=x=>'<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>'+x+'</Document></kml>';
+const pm=p=>`<Placemark><name>${esc(p.name)}</name><Point><coordinates>${p.lon},${p.lat},${p.z||0}</coordinates></Point></Placemark>`;
+async function mkDxf(){const f=$('f1').files[0],p=parse(f?await f.text():$('x1').value,$('ord').value);
+if(!p.length)return $('o1').textContent='لا توجد نقاط صالحة. راجع ترتيب الأعمدة.';
+let s='0\nSECTION\n2\nENTITIES\n';for(const q of p){s+=`0\nPOINT\n8\nPOINTS\n10\n${q.e}\n20\n${q.n}\n30\n${q.z}\n0\nTEXT\n8\nNAMES\n10\n${q.e+.3}\n20\n${q.n+.3}\n30\n0\n40\n0.8\n1\n${q.name}\n`;
+if(q.code)s+=`0\nTEXT\n8\nCODES\n10\n${q.e+.3}\n20\n${q.n-.8}\n30\n0\n40\n0.6\n1\n${q.code}\n`}
+try{$('o1').textContent=`${p.length} نقطة. `+await save('survey','dxf',s+'0\nENDSEC\n0\nEOF\n')}catch(e){$('o1').textContent='تعذر الحفظ'}}
+function dxfEnts(t){const L=t.split(/\r?\n/),P=[];for(let i=0;i+1<L.length;i+=2)P.push([+L[i].trim(),L[i+1].trim()]);
+let i=P.findIndex((p,k)=>p[0]===2&&p[1]==='ENTITIES');if(i<0)return null;const E=[];let c=null;
+for(i++;i<P.length;i++){const[g,v]=P[i];if(g===0){if(v==='ENDSEC')break;c={t:v,p:[]};E.push(c)}else if(c)c.p.push([g,v])}
+const R=[];let pl=null;for(const e of E){const f=g=>{const q=e.p.find(x=>x[0]===g);return q?+q[1]:NaN};
+if(e.t==='POINT')R.push({k:'pt',c:[f(10),f(20)]});
+else if(e.t==='LINE')R.push({k:'ln',c:[[f(10),f(20)],[f(11),f(21)]]});
+else if(e.t==='LWPOLYLINE'){const c=[];let x;for(const[g,v]of e.p){if(g===10)x=+v;else if(g===20)c.push([x,+v])}if(f(70)%2===1&&c.length)c.push(c[0]);R.push({k:'ln',c})}
+else if(e.t==='POLYLINE'){pl={k:'ln',c:[]};R.push(pl)}else if(e.t==='VERTEX'&&pl)pl.c.push([f(10),f(20)]);else if(e.t==='SEQEND')pl=null}
+return R.filter(r=>r.k==='pt'?!r.c.some(isNaN):r.c.length>1&&!r.c.some(q=>q.some(isNaN)))}
+async function cadText(f){if(!/\.dwg$/i.test(f.name))return f.text();const u=$('srv').value.trim().replace(/\/$/,'');
+try{localStorage.setItem('srv',u)}catch(e){}if(!u)throw new Error('اكتب عنوان السيرفر لتحويل DWG');
+const fd=new FormData();fd.append('cad',f);let r;try{r=await fetch(u+'/dwg_to_dxf',{method:'POST',body:fd})}catch(e){throw new Error('تعذر الاتصال بالسيرفر')}
+if(!r.ok)throw new Error('فشل التحويل في السيرفر');return r.text()}
+async function onlyDxf(){const f=$('f2').files[0];if(!f)return $('o2').textContent='اختر ملف DWG';
+try{$('o2').textContent='جاري التحويل...';$('o2').textContent=await save(f.name.replace(/\.[^.]+$/,''),'dxf',await cadText(f))}catch(e){$('o2').textContent=e.message||'تعذر الحفظ'}}
+async function mkKml(fmt){const f=$('f2').files[0];if(!f)return $('o2').textContent='اختر ملف DXF';
+let tx;try{tx=await cadText(f)}catch(e){return $('o2').textContent=e.message}
+const R=dxfEnts(tx);if(!R||!R.length)return $('o2').textContent='لم أجد نقاط أو خطوط. تأكد أن الملف DXF نصي (ASCII).';
+const ll=(x,y)=>fwd(x,y);let k='';for(const r of R){if(r.k==='pt'){const[lo,la]=ll(...r.c);k+=pm({name:'',lon:lo,lat:la})}
+else k+='<Placemark><LineString><coordinates>'+r.c.map(q=>ll(...q).join(',')+',0').join(' ')+'</coordinates></LineString></Placemark>'}
+await out(fmt,wrap(k),'survey','o2')}
+function dms(v,a,b){const s=v<0?b:a;v=Math.abs(v);const d=Math.floor(v),m=Math.floor((v-d)*60);return`${d}°${m}'${((v-d-m/60)*3600).toFixed(2)}" ${s}`}
+function addPt(){const n=+$('n').value,e=+$('e').value;if($('n').value===''||$('e').value==='')return $('o3').textContent='أدخل North و East';
+const[lon,lat]=fwd(e,n);if(!isFinite(lon)||Math.abs(lat)>90)return $('o3').textContent='النتيجة غير منطقية. راجع النظام والأرقام.';
+P.push({name:$('nm').value||'P'+(P.length+1),n,e,lat,lon});$('nm').value='';$('o3').textContent='';draw()}
+function draw(){$('tb').innerHTML='<tr><th>الاسم</th><th>Lat</th><th>Lon</th><th>DMS</th><th></th></tr>'+P.map(p=>`<tr><td>${esc(p.name)}</td><td>${p.lat.toFixed(6)}</td><td>${p.lon.toFixed(6)}</td><td>${dms(p.lat,'N','S')} ${dms(p.lon,'E','W')}</td><td><a href="https://www.google.com/maps?q=${p.lat},${p.lon}" target="_blank">خريطة</a></td></tr>`).join('')}
+async function ptsKml(fmt){if(!P.length)return $('o3').textContent='أضف نقطة أولًا';await out(fmt,wrap(P.map(pm).join('')),'points','o3')}
+tab(1);sysUI();try{$('srv').value=localStorage.getItem('srv')||''}catch(e){}if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
